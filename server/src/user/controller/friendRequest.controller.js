@@ -6,8 +6,6 @@ import Friend from "../model/friend.model.js";
 export async function sendFriendRequest(req, res) {
     try {
         const senderId = req.userId;
-        console.log("sender", senderId)
-
         const receiverId = req.params.id;
 
         const existing = await FriendRequest.findOne({ from: senderId, to: receiverId });
@@ -39,7 +37,7 @@ export async function sendFriendRequest(req, res) {
 }
 
 //cancel request
-export async function cancleFriendRequest(req, res) {
+export async function cancelFriendRequest(req, res) {
     try {
         const senderId = req.userId;
         const receiverId = req.params.id;
@@ -117,7 +115,7 @@ export async function acceptFriendRequest(req, res) {
 
         return res.status(StatusCodes.OK).json({
             message: "Friend Request Accepted",
-            succes: true
+            success: true
         })
 
     } catch (error) {
@@ -129,7 +127,31 @@ export async function acceptFriendRequest(req, res) {
     }
 }
 
-//cancel friend Request
-export async function cancelFriendRequest(params) {
-    
+//Decline friend Request
+export async function declineFriendRequest(req, res) {
+    try {
+        const { requestId } = req.params;
+
+        const request = await FriendRequest.findById(requestId)
+        if (!request) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                message: "Request not found",
+                error: true
+            })
+        }
+
+        await request.deleteOne();
+
+        return res.status(StatusCodes.OK).json({
+            message: "Declined Friend Request",
+            success: true
+        })
+
+    } catch (error) {
+        console.log("Error while declining Friend Request", error)
+        return res.status(500).json({
+            message: "Server Error",
+            error: true
+        })
+    }
 }

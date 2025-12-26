@@ -1,41 +1,19 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { useEffect } from 'react';
 import { useState } from 'react'
 import toast from 'react-hot-toast';
 import { FaTimes } from "react-icons/fa";
 import dayjs from "dayjs"
 import relativeTime from "dayjs/plugin/relativeTime"
+import { GlobalContext } from '../context/GlobalProvider';
 
 dayjs.extend(relativeTime)
 
 export default function RequestPage() {
 
-  const token = localStorage.getItem("AccessToken")
-  const [requests, setRequests] = useState([])
+  const { requests, handleAcceptRequest, handleDeclineRequest } = useContext(GlobalContext)
+
   const [openModel, setOpenModel] = useState(null)
-
-  const fetchFriendRequest = async () => {
-    try {
-      const res = await fetch("http://localhost:4000/api/friend-request/getrequest", {
-        method: "GET",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "authorization": `Bearer ${token}`
-        }
-      })
-      const data = await res.json();
-
-      setRequests(data.requests)
-
-    } catch (error) {
-      toast.error("Error in getting Friend Request")
-    }
-  }
-
-  useEffect(() => {
-    fetchFriendRequest()
-  }, [])
 
   return (
     <div className='p-4'>
@@ -45,6 +23,7 @@ export default function RequestPage() {
         {
           requests.map((request) => (
             <li
+              key={request._id}
               className=''
             >
               <div className='flex items-center gap-4 my-8 shadow-md '>
@@ -65,14 +44,14 @@ export default function RequestPage() {
 
                 <div className="flex gap-2 mx-auto">
                   <button
-                    onClick={() => handleAction(req._id, "accept")}
-                    className="px-3 py-1 bg-green-500 text-white rounded"
+                    onClick={() => handleAcceptRequest(request._id)}
+                    className="px-3 py-1 bg-green-500 hover:bg-green-900 text-white rounded"
                   >
                     Accept
                   </button>
                   <button
-                    onClick={() => handleAction(req._id, "decline")}
-                    className="px-3 py-1 bg-red-500 text-white rounded"
+                    onClick={() => handleDeclineRequest(request._id)}
+                    className="px-3 py-1 bg-red-500 hover:bg-red-900 text-white rounded"
                   >
                     Decline
                   </button>

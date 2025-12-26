@@ -12,6 +12,7 @@ import svgCaptcha from "svg-captcha"
 import cloudinary from "../utils/cloudinary.config.js";
 import fs from "fs"
 import FriendRequest from "../model/friendrequest.model.js";
+import Friend from "../model/friend.model.js";
 
 
 // Temporary captcha store (replace with Redis for production)
@@ -545,13 +546,22 @@ export async function fetchEachUser(req, res) {
             status: "pending"
         })
 
+        // to check the user is friend with or not
+        const isFriend = await Friend.exists({
+            $or: [
+                { user: loggedUser, friend: user_id },
+                { user: user_id, friend: loggedUser }
+            ]
+        })
+
         return res.status(StatusCodes.OK).json({
             message: "successfully",
             success: true,
             error: false,
             eachUser,
             isFriendRequestSent: !!isRequestSent,
-            isFriendRequestReceived: !!isRequestReceived
+            isFriendRequestReceived: !!isRequestReceived,
+            isFriendWith: !!isFriend
         })
 
     } catch (error) {

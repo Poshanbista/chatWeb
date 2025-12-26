@@ -1,11 +1,15 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router'
 import { FaTimes } from "react-icons/fa";
 import { FaUserPlus } from "react-icons/fa";
 import { useSelector } from 'react-redux';
+import { GlobalContext } from '../context/GlobalProvider';
 
 export default function UserPage() {
+
+    const { requests, handleAcceptRequest } = useContext(GlobalContext)
+
     const token = localStorage.getItem("AccessToken")
     const loggedInUser = useSelector((state) => state.user)
     const navigate = useNavigate()
@@ -16,6 +20,8 @@ export default function UserPage() {
     const [openModel, setOpenModel] = useState(false)
 
     const [requestSend, setRequestSend] = useState(false)
+    const [requestReceived, setRequestReceived] = useState(false)
+    const [isFriend, setIsFriend] = useState(false)
 
     const fetchEachUser = async () => {
         try {
@@ -45,6 +51,9 @@ export default function UserPage() {
             }
 
             setRequestSend(!!data.isFriendRequestSent);
+            setRequestReceived(!!data.isFriendRequestReceived)
+            setIsFriend(!!data.isFriendWith)
+
 
         } catch (error) {
             toast.error("Error in fetching Individual users")
@@ -142,7 +151,26 @@ export default function UserPage() {
                 )}
                 <div className='mx-auto'>
                     {
-                        requestSend ? (
+                        isFriend ? (
+                            <button
+                                className='flex gap-1 items-center font-semibold border p-2 rounded-lg px-3 bg-blue-600 text-white hover:bg-blue-900 '
+                            >
+                                Friend
+                            </button>
+                        ) : requestReceived ? (
+                            <div className="flex gap-2 mx-auto">
+                                <button
+                                    className="px-3 py-1 bg-green-500 text-white rounded"
+                                >
+                                    Accept
+                                </button>
+                                <button
+                                    className="px-3 py-1 bg-red-500 text-white rounded"
+                                >
+                                    Decline
+                                </button>
+                            </div>
+                        ) : requestSend ? (
                             <button
                                 onClick={handleCancelFriendRequest}
                                 className='flex gap-1 items-center font-semibold border p-2 rounded-lg px-3 bg-blue-600 text-white hover:bg-blue-900 '>

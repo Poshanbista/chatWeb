@@ -4,6 +4,7 @@ import { Provider } from "react-redux"
 import router from './routes/router.jsx'
 import { store } from "./redux/store.js"
 import './index.css';
+import { GlobalProvider } from './context/GlobalProvider.jsx'
 
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
@@ -11,7 +12,9 @@ createRoot(document.getElementById('root')).render(
   // </StrictMode>,
 
   <Provider store={store}>
-    <RouterProvider router={router} />
+    <GlobalProvider>
+      <RouterProvider router={router} />
+    </GlobalProvider>
   </Provider>
 
 
