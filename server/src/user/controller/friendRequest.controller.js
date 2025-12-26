@@ -1,5 +1,6 @@
 import { StatusCodes } from "http-status-codes";
 import FriendRequest from "../model/friendrequest.model.js";
+import Friend from "../model/friend.model.js";
 
 //send friend request 
 export async function sendFriendRequest(req, res) {
@@ -86,4 +87,49 @@ export async function getFriendRequest(req, res) {
             error: true
         })
     }
+}
+
+
+//accept friend request
+export async function acceptFriendRequest(req, res) {
+    try {
+        const { requestId } = req.params;
+
+        const friendReq = await FriendRequest.findById(requestId);
+        if (!friendReq) {
+            return res.status(StatusCodes.NOT_FOUND).json({
+                message: "Friend Request not found",
+                error: true
+            })
+        }
+
+        await Friend.create({
+            user: friendReq.to,
+            friend: friendReq.from
+        })
+
+        await Friend.create({
+            user: friendReq.from,
+            friend: friendReq.to
+        })
+
+        await FriendRequest.findByIdAndDelete(requestId)
+
+        return res.status(StatusCodes.OK).json({
+            message: "Friend Request Accepted",
+            succes: true
+        })
+
+    } catch (error) {
+        console.log("Error while accepting Friend Request", error)
+        return res.status(500).json({
+            message: "Server Error",
+            error: true
+        })
+    }
+}
+
+//cancel friend Request
+export async function cancelFriendRequest(params) {
+    
 }

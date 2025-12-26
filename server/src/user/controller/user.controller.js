@@ -531,9 +531,17 @@ export async function fetchEachUser(req, res) {
             })
         }
 
+        //to check the user send a request or not 
         const isRequestSent = await FriendRequest.exists({
             from: loggedUser,
             to: user_id,
+            status: "pending"
+        })
+
+        // to check the user received the request from the individual user
+        const isRequestReceived = await FriendRequest.exists({
+            from: user_id,
+            to: loggedUser,
             status: "pending"
         })
 
@@ -542,7 +550,8 @@ export async function fetchEachUser(req, res) {
             success: true,
             error: false,
             eachUser,
-            isFriendRequestSent: !!isRequestSent
+            isFriendRequestSent: !!isRequestSent,
+            isFriendRequestReceived: !!isRequestReceived
         })
 
     } catch (error) {
