@@ -10,6 +10,7 @@ import cookieparser from "cookie-parser"
 import { db_config } from "./common/config/db_config.js";
 import userRoutes from "./user/routes/user.routes.js";
 import friendRequestRoutes from "./user/routes/friendrequest.routes.js";
+import friendRoutes from "./user/routes/friends.routes.js";
 
 db_config();
 
@@ -37,6 +38,7 @@ app.get("/", (req, res) => {
 
 app.use("/api/user", userRoutes)
 app.use("/api/friend-request", friendRequestRoutes)
+app.use("/api/friends", friendRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
