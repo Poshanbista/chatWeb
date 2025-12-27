@@ -1,7 +1,7 @@
 import { StatusCodes } from "http-status-codes";
 import Friend from "../model/friend.model.js";
 
-
+// get all Friend 
 export async function getAllFriend(req, res) {
     try {
 

@@ -54,7 +54,7 @@ export default function ChatPage() {
               </div>
             ))
           ) : (
-            <p className='text-gray-600 font-semibold text-lg' >No Friend</p>
+            <p className='text-gray-600 font-semibold text-lg'>No Friend</p>
           )
         }
       </div>
