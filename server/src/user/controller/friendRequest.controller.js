@@ -21,6 +21,14 @@ export async function sendFriendRequest(req, res) {
             to: receiverId
         })
 
+        // //emit socket event to receiver in real-time
+        // if(req.io){
+        //     req.io.to(receiverId).emit("receivedFriendRequest",{
+        //         from:senderId,
+        //         requestId :request._id
+        //     })
+        // } 
+
         res.status(StatusCodes.OK).json({
             message: "Friend Request Send",
             success: true,

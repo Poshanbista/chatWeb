@@ -7,7 +7,7 @@ export async function getAllFriend(req, res) {
 
         const userId = req.userId;
 
-        const friendData = await Friend.findOne(
+        const friendData = await Friend.find(
             { user: userId }
         ).populate("friend", "username displayName profile_picture")
 
@@ -15,13 +15,16 @@ export async function getAllFriend(req, res) {
             return res.status(StatusCodes.NOT_FOUND).json({
                 message: "no friend",
                 success: true,
-                friends: []
+                friends: ""
             })
         }
 
+        //fetch latest message
+        
+
         return res.status(StatusCodes.OK).json({
             success: true,
-            friends: friendData.friend
+            friends: friendData
         })
 
     } catch (error) {

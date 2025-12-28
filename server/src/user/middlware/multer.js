@@ -1,10 +1,16 @@
 import multer from "multer"
+import cloudinary from "../utils/cloudinary.config.js";
+import { CloudinaryStorage } from "multer-storage-cloudinary"
 
-const storage = multer.diskStorage({
-    filename: function (req, file, cb) {
-        cb(null, file.originalname)
+const storage = new CloudinaryStorage({
+    cloudinary,
+    params: (req, file) => {
+        let folder = "Chat_app";
+        return {
+            folder,
+            resource_type: "auto",
+        }
     }
 })
 
-const upload = multer({ storage: storage });
-export default upload;
+export const upload = multer({ storage })

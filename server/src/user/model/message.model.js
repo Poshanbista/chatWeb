@@ -1,11 +1,6 @@
 import mongoose from "mongoose";
 
 const MessageSchema = new mongoose.Schema({
-    conversationId: {
-        type: mongoose.Types.ObjectId,
-        required: true,
-        index: true
-    },
     from: {
         type: mongoose.Types.ObjectId,
         ref: 'User',
@@ -17,7 +12,12 @@ const MessageSchema = new mongoose.Schema({
         required: true
     },
 
-    text: String,
+    text: {
+        type: String,
+        default: ""
+    },
+
+
     attachments: [{ type: String }], // URLs (images, voice files)
 
     type: {
@@ -33,4 +33,7 @@ const MessageSchema = new mongoose.Schema({
 
     createdAt: { type: Date, default: Date.now }
 });
-module.exports = mongoose.model('Message', MessageSchema);
+
+const MessageModel = mongoose.model("MessageModel", MessageSchema)
+
+export default MessageModel;

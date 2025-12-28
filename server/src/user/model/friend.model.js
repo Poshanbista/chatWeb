@@ -7,16 +7,14 @@ const FriendSchema = new mongoose.Schema({
         required: true,
         index: true
     },
-    friend: [
-        {
-            type: mongoose.Types.ObjectId,
-            ref: 'User',
-            required: true
-        }
-    ],
+    friend: {
+        type: mongoose.Types.ObjectId,
+        ref: 'User',
+        required: true
+    },
     createdAt: { type: Date, default: Date.now }
 });
 
-const Friend = mongoose.model("Friend",FriendSchema)
+const Friend = mongoose.model("Friend", FriendSchema)
 
 export default Friend;
