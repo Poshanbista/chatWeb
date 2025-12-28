@@ -1,14 +1,17 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import UserMenu from '../component/UserMenu.jsx'
 import Setting from "../component/Setting.jsx"
 import { useSelector } from 'react-redux'
 import { Link, useNavigate } from 'react-router'
 import { FaSearch } from "react-icons/fa"
 import { FaArrowLeft } from "react-icons/fa6"
+import { GlobalContext } from '../context/GlobalProvider.jsx'
 
 export default function Header() {
     const user = useSelector((state) => state.user)
     const navigate = useNavigate();
+
+    // const { unReadRequest } = useContext(GlobalContext)
 
     const [isOpenUserMenu, setIsOpenUserMenu] = useState(false)
     const [activeMenu, setActiveMenu] = useState("user")
@@ -186,8 +189,17 @@ export default function Header() {
 
                         <Link
                             to={"/request"}
-                            className="hover:text-blue-500 cursor-pointer transition"
+                            className="hover:text-blue-500 cursor-pointer transition relative"
                         >Request
+                            {/* {
+                                unReadRequest > 0 && (
+                                    <span
+                                        className='absolute -top-2 -right-2 h-5 w-5 bg-red-600 text-white text-xs rounded-full flex items-center justify-center'
+                                    >
+                                        {unReadRequest}
+                                    </span>
+                                )
+                            } */}
                         </Link>
                     </nav>
 

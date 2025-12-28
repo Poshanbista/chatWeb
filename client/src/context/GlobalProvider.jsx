@@ -8,6 +8,7 @@ export const GlobalContext = createContext();
 export const GlobalProvider = ({ children }) => {
     const token = localStorage.getItem("AccessToken")
     const [requests, setRequests] = useState([])
+    const [unReadRequest, setUnReadRequest] = useState(0)
 
     //fetch frn request
     const fetchFriendRequest = async () => {
@@ -22,7 +23,9 @@ export const GlobalProvider = ({ children }) => {
             })
             const data = await res.json();
 
-            setRequests(data.requests)
+            if (data.success) {
+                setRequests(data.requests);
+            }
 
         } catch (error) {
             toast.error("Error in getting Friend Request")
@@ -43,7 +46,7 @@ export const GlobalProvider = ({ children }) => {
                 }
             })
             const data = await res.json();
-            
+
             if (data.success) {
                 setRequests(prev => prev.filter(r => r._id !== requestId));
                 toast.success(data.message);
@@ -84,16 +87,17 @@ export const GlobalProvider = ({ children }) => {
         }
     }
 
-
     useEffect(() => {
-        fetchFriendRequest()
+        fetchFriendRequest();
     }, [])
+
 
 
 
     return (
         <GlobalContext.Provider value={{
             requests,
+            setUnReadRequest,
             fetchFriendRequest,
             handleAcceptRequest,
             handleDeclineRequest,

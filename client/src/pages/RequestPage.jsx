@@ -11,9 +11,13 @@ dayjs.extend(relativeTime)
 
 export default function RequestPage() {
 
-  const { requests, handleAcceptRequest, handleDeclineRequest } = useContext(GlobalContext)
+  const { requests, fetchFriendRequest, handleAcceptRequest, handleDeclineRequest } = useContext(GlobalContext)
 
   const [openModel, setOpenModel] = useState(null)
+
+  useEffect(() => {
+    fetchFriendRequest();
+  }, [])
 
   return (
     <div className='p-4'>
