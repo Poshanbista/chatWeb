@@ -8,7 +8,8 @@ const messageRoutes = Router();
 
 messageRoutes.post("/send", auth, upload.array("attachments"), sendMessage)
 messageRoutes.get("/:friendId", auth, getMessages)
-messageRoutes.patch("/status", auth, updateMessageStatus)
+messageRoutes.put("/update-status", auth, updateMessageStatus)
+
 
 
 export default messageRoutes;

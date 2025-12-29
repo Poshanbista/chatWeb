@@ -22,9 +22,10 @@ const MessageSchema = new mongoose.Schema({
 
     type: {
         type: String,
-        enum: ['text', 'image', 'voice', 'system'],
-        default: 'text'
+        enum: ["text", "image", "audio", "file"], // add file
+        default: "text",
     },
+
     status: {
         type: String,
         enum: ['sent', 'delivered', 'read'],

@@ -13,4 +13,19 @@ const storage = new CloudinaryStorage({
     }
 })
 
-export const upload = multer({ storage })
+export const upload = multer({
+    storage,
+    limits: { fileSize: 6 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        if (
+            file.mimetype.startsWith("image/") ||
+            file.mimetype.startsWith("audio/") ||
+            file.mimetype === "application/pdf" ||
+            file.mimetype === "text/plain"
+        ) {
+            cb(null, true);
+        } else {
+            cb(new Error("File type not supported"), false);
+        }
+    }
+});

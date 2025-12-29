@@ -18,8 +18,6 @@ export async function getAllFriend(req, res) {
                 friends: ""
             })
         }
-
-        //fetch latest message
         
 
         return res.status(StatusCodes.OK).json({

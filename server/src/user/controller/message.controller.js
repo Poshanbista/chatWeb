@@ -81,18 +81,37 @@ export async function getMessages(req, res) {
 export async function updateMessageStatus(req, res) {
     try {
 
-        const { messageId, status } = req.body;
+        const { messageIds } = req.body;
+        const userId = req.userId;
 
-        const messages = await MessageModel.findByIdAndUpdate(
-            messageId,
-            { status },
-            { new: true }
-        )
+
+        // Update unread messages to read
+        await MessageModel.updateMany(
+            {
+                _id: { $in: messageIds },
+                to: userId,
+                status: { $ne: "read" }
+            },
+            { $set: { status: "read" } }
+        );
+
+        // Fetch updated messages with latest status
+        const updatedMessages = await MessageModel.find({
+            _id: { $in: messageIds }
+        });
+
+        // Send realtime updates to message sender
+        updatedMessages.forEach(msg => {
+            req.io.to(msg.from.toString()).emit("messageStatusUpdated", {
+                messageId: msg._id.toString(),
+                status: msg.status
+            });
+        });
 
         return res.status(StatusCodes.OK).json({
             success: true,
-            messages
-        })
+            updated: updatedMessages.length,
+        });
 
     } catch (error) {
         console.log("Error while update message status", error)
