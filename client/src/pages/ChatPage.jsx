@@ -1,25 +1,34 @@
-import React, { useRef } from 'react'
-import { useEffect } from 'react';
-import { useState } from 'react';
-import toast from "react-hot-toast"
-import { io } from "socket.io-client"
-import { useSelector } from "react-redux"
+import React, { useRef, useState, useEffect } from "react";
+import toast from "react-hot-toast";
+import { io } from "socket.io-client";
+import { useSelector } from "react-redux";
+import { FaImage, FaMicrophone, FaStop } from "react-icons/fa";
 
-const socket = io("http://localhost:4000", { autoConnect: true })
+const socket = io("http://localhost:4000", { autoConnect: true });
 
 export default function ChatPage() {
-
-  const user = useSelector((state) => state.user)
-  const userId = user._id
-
+  const user = useSelector((state) => state.user);
+  const userId = user._id;
   const token = localStorage.getItem("AccessToken");
+
   const [friends, setFriends] = useState([]);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [messageText, setMessageText] = useState("");
+  const [attachments, setAttachments] = useState([]);
 
-  const [selectedFriend, setSelectedFriend] = useState(null)
+  const chatBodyRef = useRef(null);
 
-  const [messages, setMessages] = useState([])
-  const [messageText, setMessageText] = useState("")
-  const [attachments, setAttachments] = useState([])
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+
+  // Scroll bottom when messages update
+  useEffect(() => {
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   useEffect(() => {
     fetchFriend();
@@ -30,9 +39,42 @@ export default function ChatPage() {
       setSelectedFriend(friendObj);
       fetchMessage(friendObj._id);
     }
-  }, [])
+  }, []);
 
-  // fetch friend
+  const handleVoiceClick = async () => {
+    if (!isRecording) {
+      // Start recording
+      setIsRecording(true);
+      audioChunksRef.current = [];
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        const mediaRecorder = new MediaRecorder(stream);
+        mediaRecorderRef.current = mediaRecorder;
+
+        mediaRecorder.addEventListener("dataavailable", (event) => {
+          audioChunksRef.current.push(event.data);
+        });
+
+        mediaRecorder.addEventListener("stop", () => {
+          const audioBlob = new Blob(audioChunksRef.current, { type: "audio/mp3" });
+          sendVoice(audioBlob); // send audio blob to parent function
+        });
+
+        mediaRecorder.start();
+      } catch (err) {
+        console.error("Microphone access denied:", err);
+        setIsRecording(false);
+      }
+    } else {
+      // Stop recording
+      setIsRecording(false);
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+
+  // Fetch Friends
   const fetchFriend = async () => {
     try {
       const res = await fetch("http://localhost:4000/api/friends/getFriend", {
@@ -40,42 +82,36 @@ export default function ChatPage() {
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          "authorization": `Bearer ${token}`
-        }
-      })
-
+          Authorization: `Bearer ${token}`,
+        },
+      });
       const data = await res.json();
-
-      setFriends(data.friends || [])
-
+      setFriends(data.friends || []);
     } catch (error) {
-      toast.error("Error while fetching all friends")
+      toast.error("Error while fetching all friends");
     }
-  }
+  };
 
-  //fetch message API
+  // Fetch Messages
   const fetchMessage = async (friendId) => {
     try {
-
       const res = await fetch(`http://localhost:4000/api/messages/${friendId}`, {
         method: "GET",
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          "authorization": `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       const data = await res.json();
       setMessages(data.messages || []);
-      scrollToBottom();
-
     } catch (error) {
       toast.error("Error while fetching messages");
     }
-  }
+  };
 
-  //send message API
+  // Send Message API
   const sendMessage = async () => {
     if (!messageText && attachments.length === 0) return;
     if (!selectedFriend) return;
@@ -89,189 +125,211 @@ export default function ChatPage() {
       const res = await fetch("http://localhost:4000/api/messages/send", {
         method: "POST",
         credentials: "include",
-        headers: {
-          "authorization": `Bearer ${token}`, // only Authorization header
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
       const data = await res.json();
-
       if (data.success) {
-        setMessages((prev) => [...prev, data.messages]); // append new message
-        setMessageText(""); // clear input
-        setAttachments([]); // clear files
-        scrollToBottom();
-      } else {
-        toast.error("Failed to send message");
+        setMessages((prev) => [...prev, data.messages]);
+        setMessageText("");
+        setAttachments([]);
       }
     } catch (error) {
-      console.error(error); // log the real error
       toast.error("Error while sending message");
     }
   };
 
-
-  const chatBodyRef = useRef(null)
-
-  // Scroll chat to bottom
-  const scrollToBottom = () => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }
-  }
-
+  // Select friend
   const handleSelectFriend = (friend) => {
     setSelectedFriend(friend);
-    localStorage.setItem("selectedFriend", JSON.stringify(friend)); // Save only when user clicks
+    localStorage.setItem("selectedFriend", JSON.stringify(friend));
     fetchMessage(friend._id);
   };
 
-
+  // Socket Listeners (Realtime Status + Delivery)
   useEffect(() => {
     if (!userId) return;
 
-    // Join user's own room
     socket.emit("join", userId);
 
-    // Listen for real-time messages
     const handleReceivedMessage = (msg) => {
       if (selectedFriend && msg.from === selectedFriend._id) {
-        setMessages((prev) => [...prev, msg]); // Update messages
-        scrollToBottom();
+        setMessages((prev) => [...prev, msg]);
+
+        // Mark delivered immediately
+        fetch("http://localhost:4000/api/messages/update-status", {
+          method: "PUT",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ messageIds: [msg._id] }),
+        });
       }
     };
 
-    socket.on("receivedMessage", handleReceivedMessage);
+    const handleMessageStatusUpdated = ({ messageId, status }) => {
+      setMessages((prev) =>
+        prev.map((m) => (m._id === messageId ? { ...m, status } : m))
+      );
+    };
 
-    // Clean up listener
+    socket.on("receivedMessage", handleReceivedMessage);
+    socket.on("messageStatusUpdated", handleMessageStatusUpdated);
+
     return () => {
       socket.off("receivedMessage", handleReceivedMessage);
+      socket.off("messageStatusUpdated", handleMessageStatusUpdated);
     };
   }, [selectedFriend, userId]);
 
+  // Mark Messages READ when Chat is opened
+  useEffect(() => {
+    if (!selectedFriend) return;
 
+    const unreadIds = messages
+      .filter((m) => m.to === userId && m.status !== "read")
+      .map((m) => m._id);
 
+    if (unreadIds.length > 0) {
+      fetch("http://localhost:4000/api/messages/update-status", {
+        method: "PUT",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ messageIds: unreadIds }),
+      });
+    }
+  }, [messages, selectedFriend, userId]);
 
   return (
-    <div className='w-full h-[90vh] flex bg-white'>
-      <div className="w-1/3 border-r p-4 overflow-y-auto flex flex-col gap-0.5">
+    <div className="w-full h-[90vh] flex">
+
+      {/* Sidebar */}
+      <div className="w-1/3 border-r p-4 overflow-y-auto">
         <h2 className="font-bold text-lg mb-3">Chats</h2>
         {friends.map((f) => (
           <div
             key={f._id}
             onClick={() => handleSelectFriend(f.friend)}
-            className={`flex items-center gap-3 p-2 rounded-full cursor-pointer hover:bg-gray-600  
-              ${selectedFriend?._id === f.friend._id ? "bg-gray-400" : "bg-white text-black"
+            className={`flex items-center p-2 rounded cursor-pointer mb-1 ${selectedFriend?._id === f.friend._id
+              ? "bg-gray-300"
+              : "hover:bg-gray-200"
               }`}
           >
             <img
               src={f.friend.profile_picture}
-              className="w-8 h-8 rounded-full" />
-            <div>
-              <p className="font-semibold">{f.friend.displayName} ({f.friend.username})</p>
-              {/* <p className="text-xs text-gray-600">{f.friend.username}</p> */}
-            </div>
+              className="w-8 h-8 rounded-full mr-3"
+            />
+            <p>{f.friend.displayName}</p>
           </div>
         ))}
       </div>
 
-      <div className='w-2/3 bg-gray-100 flex flex-col'>
-        {
-          selectedFriend ? (
-            <>
-              {/* Chat Header */}
-              <div className='flex items-center gap-3 p-3 bg-black text-white shadow'>
-                <img
-                  src={selectedFriend.profile_picture}
-                  alt='profile'
-                  className='w-10 h-10 rounded-full object-cover'
-                />
-                <div>
-                  <h3 className='font-semibold text-lg'>{selectedFriend.displayName}</h3>
-                  <p className='text-xs text-gray-500'>{selectedFriend.username}</p>
-                </div>
-              </div>
+      {/* Chat Area */}
+      <div className="w-2/3 bg-gray-100 flex flex-col">
 
-              {/* Chat Messages */}
-              <div
-                className="flex-1 p-4 overflow-y-auto flex flex-col" // add flex flex-col
-                ref={chatBodyRef}
-              >
-                {messages.length > 0 ? (
-                  messages.map((msg) => {
-                    const isOwnMessage = msg.from === userId; // userId = logged-in user's ID
-
-                    return (
-                      <div
-                        key={msg._id}
-                        className={`my-2 p-2 rounded-lg max-w-xs break-words
-                           ${isOwnMessage ? "bg-blue-500 text-white self-end" : "bg-gray-200 text-black self-start"}`}
-                      >
-                        {msg.text && <p>{msg.text}</p>}
-
-                        {msg.attachments &&
-                          msg.attachments.map((att, i) => (
-                            <div key={i} className="mt-1">
-                              {att.endsWith(".mp3") ? (
-                                <audio controls src={att}></audio>
-                              ) : att.endsWith(".pdf") ? (
-                                <a
-                                  href={att}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-blue-600 underline"
-                                >
-                                  PDF File
-                                </a>
-                              ) : (
-                                <img
-                                  src={att}
-                                  className="w-40 h-40 object-cover rounded-md mt-1"
-                                />
-                              )}
-                            </div>
-                          ))}
-                      </div>
-                    );
-                  })
-                ) : (
-                  <p className="text-center text-gray-500 mt-4">No messages yet</p>
-                )}
-              </div>
-
-
-              {/* chat input field */}
-              <div className='p-3 bg-white flex gap-2'>
-                <input
-                  type='text'
-                  placeholder='type a message'
-                  className='flex-1 py-2 px-3 border rounded-full outline-none'
-                  value={messageText}
-                  onChange={(e) => setMessageText(e.target.value)}
-                  onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-                />
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => setAttachments([...e.target.files])}
-                />
-
-
-                <button
-                  onClick={sendMessage}
-                  className='bg-blue-600 text-white px-4 rounded-full'>
-                  Send
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className='flex items-center justify-center flex-1  '>
-              <p className='text-gray-500 font-semibold'>Select Friend to Chat</p>
+        {selectedFriend ? (
+          <>
+            {/* Header */}
+            <div className="p-3 bg-black text-white flex items-center gap-3">
+              <img
+                src={selectedFriend.profile_picture}
+                className="w-10 h-10 rounded-full"
+              />
+              <p className="font-semibold">{selectedFriend.displayName}</p>
             </div>
-          )
-        }
+
+            {/* Messages */}
+            <div className="flex-1 p-4 overflow-y-auto flex flex-col" ref={chatBodyRef}>
+              {messages.map((msg) => {
+                const isOwnMessage = msg.from === userId;
+
+                return (
+                  <div
+                    key={msg._id}
+                    className={`my-2 flex ${isOwnMessage ? "justify-end" : "justify-start"}`}
+                  >
+                    {/* Bubble */}
+                    <div
+                      className={`relative px-3 py-2 rounded-lg max-w-xs break-words ${isOwnMessage ? "bg-green-900 text-white" : "bg-gray-800 text-white"}`}
+                    >
+                      {/* Message text */}
+                      <div>{msg.text}</div>
+
+                      {/* Time and Status */}
+                      <div className="flex items-center justify-end space-x-1 mt-1">
+                        <span className="text-[10px] text-gray-200">
+                          {new Date(msg.createdAt).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                        {/* ksdflsdf ✓✓ */}
+                        {isOwnMessage && (
+                          <span className="text-[10px]">
+                            {msg.status === "sent" && "sent"}
+                            {msg.status === "delivered" && "delivered"} 
+                            {msg.status === "read" && (
+                              <span className="text-blue-300 font-bold">seen</span>
+                            )}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+
+              })}
+            </div>
+
+            {/* Input Field */}
+            <div className="p-3 bg-white flex gap-2 items-center">
+              <input type="file" accept="image/*" className="hidden" id="uploadImage" />
+              <label htmlFor="uploadImage" className="cursor-pointer p-2 hover:bg-gray-200 rounded-full">
+                <FaImage className="text-xl text-gray-600" />
+              </label>
+
+              <input
+                type="text"
+                className="flex-1 border rounded-full px-3 py-2"
+                placeholder="Type message..."
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+              />
+
+              {/* Voice Icon */}
+              <button
+                onClick={handleVoiceClick}
+                className={`p-2 rounded-full hover:bg-gray-200 ${isRecording ? "bg-red-500 text-white" : ""}`}
+              >
+                {isRecording ? (
+                  <FaStop className="text-xl" />
+                ) : (
+                  <FaMicrophone className="text-gray-600 text-xl" />
+                )}
+              </button>
+
+
+              <button
+                onClick={sendMessage}
+                className="bg-blue-600 text-white px-4 py-2 rounded-full"
+              >
+                Send
+              </button>
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center flex-1">
+            <p className="text-gray-600 font-medium">Select a chat to start messaging</p>
+          </div>
+        )}
       </div>
-    </div >
-  )
+    </div>
+  );
 }
