@@ -75,6 +75,15 @@ io.on("connection", (socket) => {
         console.log(`User ${userId} joined thier room`)
     })
 
+    socket.on("typing", ({ to }) => {
+        io.to(to).emit("typing");
+    });
+
+    socket.on("stopTyping", ({ to }) => {
+        io.to(to).emit("stopTyping");
+    });
+
+
     messageHandler(io, socket);
     typingHandler(io, socket);
 

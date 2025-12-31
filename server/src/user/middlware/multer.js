@@ -1,31 +1,30 @@
 import multer from "multer"
-import cloudinary from "../utils/cloudinary.config.js";
-import { CloudinaryStorage } from "multer-storage-cloudinary"
+import fs from "fs"
 
-const storage = new CloudinaryStorage({
-    cloudinary,
-    params: (req, file) => {
-        let folder = "Chat_app";
-        return {
-            folder,
-            resource_type: "auto",
-        }
+
+// Check if the folder exists, if not, create it
+if (!fs.existsSync("./publicFolder")) {
+    fs.mkdirSync("./publicFolder", { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, "./publicFolder")
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1E9)
+        cb(null, file.fieldname
+            + "-" +
+            uniqueSuffix
+            + "." +
+            file.originalname.split(".").pop(),
+
+        )
     }
 })
 
-export const upload = multer({
-    storage,
-    limits: { fileSize: 6 * 1024 * 1024 },
-    fileFilter: (req, file, cb) => {
-        if (
-            file.mimetype.startsWith("image/") ||
-            file.mimetype.startsWith("audio/") ||
-            file.mimetype === "application/pdf" ||
-            file.mimetype === "text/plain"
-        ) {
-            cb(null, true);
-        } else {
-            cb(new Error("File type not supported"), false);
-        }
-    }
-});
+const upload = multer({
+    storage
+})
+
+export default upload;

@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { auth } from "../middlware/auth.js"
 import { getMessages, sendMessage, updateMessageStatus } from "../controller/message.controller.js";
-import { upload } from "../middlware/multer.js"
-
+import upload from "../middlware/multer.js"
 
 const messageRoutes = Router();
 

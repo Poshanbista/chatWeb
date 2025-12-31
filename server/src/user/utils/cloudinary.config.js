@@ -1,11 +1,33 @@
-import { v2 as cloudinary } from "cloudinary";
-import dotenv from "dotenv";
-dotenv.config();
+import { v2 as cloudinary } from "cloudinary"
+import fs from "fs"
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_SECRET_KEY, // must be api_secret, NOT secret_key
+    api_secret: process.env.CLOUDINARY_SECRET_KEY
+
 });
 
-export default cloudinary;
+const uploadOnCloudinary = async (localFilePath) => {
+    try {
+        if (!localFilePath) return null;
+
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            folder: "chat-Web",
+            quality: "auto",
+            resource_type: "auto",
+        });
+
+        // Delete local file safely
+        if (fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+
+        return response;
+    } catch (error) {
+        if (localFilePath && fs.existsSync(localFilePath)) fs.unlinkSync(localFilePath);
+        console.error("Cloudinary upload error:", error);
+        return null;
+    }
+};
+
+
+export default uploadOnCloudinary;

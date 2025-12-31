@@ -1,27 +1,47 @@
 import MessageModel from "../model/message.model.js";
 import { StatusCodes } from "http-status-codes"
-
+import uploadOnCloudinary from "../utils/cloudinary.config.js";
 
 
 // send Message
 export async function sendMessage(req, res) {
     try {
-
         const { to, text, type } = req.body;
         const from = req.userId;
 
         let attachments = [];
+        let messageType = type || "text";
+
 
         if (req.files && req.files.length > 0) {
-            attachments = req.files.map(file => file.path)
+            for (const file of req.files) {
+                const uploadedFile = await uploadOnCloudinary(file.path);
+                if (uploadedFile) {
+                    attachments.push(uploadedFile.secure_url);
+
+                    // Determine type based on file extension
+                    const ext = file.originalname.split(".").pop().toLowerCase();
+
+                    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) {
+                        messageType = "image";
+                    } else if (["mp3", "wav", "ogg"].includes(ext)) {
+                        messageType = "audio";
+                    } else if (["pdf", "txt", "doc", "docx"].includes(ext)) {
+                        messageType = "file";
+                    } else {
+                        messageType = "file"; // default for unknown files
+                    }
+                }
+            }
         }
+        console.log("file", req.files)
 
         const messages = await MessageModel.create({
             from,
             to,
             text,
             attachments,
-            type: type || (attachments.length > 0 ? "file" : "text"),
+            type: attachments.length > 0 ? messageType : "text",
         });
 
         // Check if recipient is online
@@ -37,6 +57,7 @@ export async function sendMessage(req, res) {
             success: true,
             messages
         })
+
 
 
     } catch (error) {

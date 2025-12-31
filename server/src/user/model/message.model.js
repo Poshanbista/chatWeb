@@ -23,7 +23,6 @@ const MessageSchema = new mongoose.Schema({
     type: {
         type: String,
         enum: ["text", "image", "audio", "file"], // add file
-        default: "text",
     },
 
     status: {

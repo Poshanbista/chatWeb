@@ -9,8 +9,6 @@ import { generateOTP } from "../utils/otpGenerator.js";
 import { transporter } from "../utils/mailSender.js"
 import redisClient from "../../redisconfig/redis.js";
 import svgCaptcha from "svg-captcha"
-import cloudinary from "../utils/cloudinary.config.js";
-import fs from "fs"
 import FriendRequest from "../model/friendrequest.model.js";
 import Friend from "../model/friend.model.js";
 
@@ -430,42 +428,6 @@ export async function userResetPassword(req, res) {
 
     } catch (error) {
         console.error("Error in process of Resetting password", error);
-        console.info("Server Error")
-    }
-}
-
-//upload profile picture
-export async function userProfilePicture(req, res) {
-    try {
-        if (!req.file) {
-            return res.status(StatusCodes.NOT_ACCEPTABLE).json({
-                message: "Image is required",
-                error: true
-            })
-        }
-
-        const uploadImage = await cloudinary.uploader.upload(req.file.path, {
-            folder: "profile-pictures",
-            resource_type: "image"
-        })
-
-        fs.unlinkSync(req.file.path)
-
-        const userId = req.user._id
-
-        const updatedUser = await User.findByIdAndUpdate(userId, {
-            profile_picture: uploadImage.secure_url
-        })
-
-        return res.status(StatusCodes.OK).json({
-            message: "Profile picture uploaded successfully",
-            success: true,
-            error: false,
-            user: updatedUser
-        })
-
-    } catch (error) {
-        console.error("Error in uploading profile picture", error);
         console.info("Server Error")
     }
 }
