@@ -401,7 +401,7 @@ export default function ChatPage() {
                               minute: "2-digit",
                             })}
                           </span>
-                          {/* ksdflsdf ✓✓ */}
+                          {/* message status*/}
                           {isOwnMessage && (
                             <span className="text-[10px]">
                               {msg.status === "sent" && "sent"}
@@ -417,7 +417,7 @@ export default function ChatPage() {
                   )
                 }
                 )}
-              {/* ▼ Here! Typing Indicator ▼ */}
+              {/* Typing Indicator ▼ */}
               {typingStatus && (
                 <div className="text-sm italic text-gray-500 ml-2">Typing...</div>
               )}
