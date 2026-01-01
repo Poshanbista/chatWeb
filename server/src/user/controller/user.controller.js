@@ -258,7 +258,7 @@ export async function userLogin(req, res) {
 
 }
 
-//logout 
+//logout controller
 export async function userLogout(req, res) {
     const cookiesOption = {
         httpOnly: true,
