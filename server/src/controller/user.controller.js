@@ -2,11 +2,11 @@ import { StatusCodes } from "http-status-codes"
 import crypto from "crypto";
 import User from "../model/user.model.js"
 import bcrypt from "bcryptjs"
-import generateAccessToken from "../utils/generateAccessToken.js";
-import generateRefreshToken from "../utils/generateRefreshToken.js";
-import { checkLoginAttemps, recordFailedAttempt, resetAttempts } from "../utils/loginRateLimit.js";
-import { generateOTP } from "../utils/otpGenerator.js";
-import { transporter } from "../utils/mailSender.js"
+import generateAccessToken from "../utils/user/generateAccessToken.js";
+import generateRefreshToken from "../utils/user/generateRefreshToken.js";
+import { checkLoginAttemps, recordFailedAttempt, resetAttempts } from "../utils/user/loginRateLimit.js";
+import { generateOTP } from "../utils/user/otpGenerator.js";
+import { transporter } from "../utils/user/mailSender.js"
 import redisClient from "../../redisconfig/redis.js";
 import svgCaptcha from "svg-captcha"
 import FriendRequest from "../model/friendrequest.model.js";
@@ -249,7 +249,6 @@ export async function userLogin(req, res) {
                 fullUser
             }
         })
-
 
     } catch (error) {
         console.log("Error in login", error);

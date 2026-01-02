@@ -65,6 +65,7 @@ app.use("/api/friend-request", friendRequestRoutes)
 app.use("/api/friends", friendRoutes)
 app.use("/api/messages", messageRoutes)
 
+
 // Socket.IO connection
 io.on("connection", (socket) => {
     console.log("User connected:" + socket.id)
