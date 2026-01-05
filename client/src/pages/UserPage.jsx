@@ -4,11 +4,8 @@ import { useNavigate, useParams } from 'react-router'
 import { FaTimes } from "react-icons/fa";
 import { FaUserPlus } from "react-icons/fa";
 import { useSelector } from 'react-redux';
-import { GlobalContext } from '../context/GlobalProvider';
 
 export default function UserPage() {
-
-    const { requests, handleAcceptRequest } = useContext(GlobalContext)
 
     const token = localStorage.getItem("AccessToken")
     const loggedInUser = useSelector((state) => state.user)
@@ -79,6 +76,7 @@ export default function UserPage() {
             const data = await res.json();
             console.log("Data", data)
 
+
             if (!res.ok) {
                 toast.error(data.message || "Friend request sending failed")
                 return
@@ -91,6 +89,8 @@ export default function UserPage() {
             toast.error("Error in sending friend request")
         }
     }
+
+
 
 
     const handleCancelFriendRequest = async () => {

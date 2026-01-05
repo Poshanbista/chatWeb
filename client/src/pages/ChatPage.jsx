@@ -234,7 +234,7 @@ export default function ChatPage() {
     }
   }, [selectedFriend, messages]); // ✅ depend on messages too
 
-  // === Socket Listener: read messages ===
+  //  Socket Listener: read messages 
   useEffect(() => {
     socket.on("messageRead", ({ messageIds }) => {
       setMessages((prev) =>
