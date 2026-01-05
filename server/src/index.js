@@ -7,16 +7,15 @@ import cors from "cors";
 import morgan from "morgan";
 import helmet from "helmet";
 import cookieparser from "cookie-parser"
-import { db_config } from "./common/config/db_config.js";
-import userRoutes from "./user/routes/user.routes.js";
-import friendRequestRoutes from "./user/routes/friendrequest.routes.js";
-import friendRoutes from "./user/routes/friends.routes.js";
-
+import { db_config } from "./config/db_config.js"
+import userRoutes from "./routes/user.routes.js"
+import friendRequestRoutes from "./routes/friendrequest.routes.js"
+import friendRoutes from "./routes/friends.routes.js"
 import { Server } from "socket.io";
 import http from "http"
-import { messageHandler } from "./socket/messageHandler.js";
-import { typingHandler } from "./socket/typingHandler.js";
-import messageRoutes from "./user/routes/message.routes.js";
+import { messageHandler } from "./utils/socket/messageHandler.js"
+import { typingHandler } from "./utils/socket/typingHandler.js";
+import messageRoutes from "./routes/message.routes.js";
 
 db_config();
 

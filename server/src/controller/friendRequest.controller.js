@@ -21,6 +21,7 @@ export async function sendFriendRequest(req, res) {
             to: receiverId
         })
 
+        console.log("FriendRequest",request)
         // //emit socket event to receiver in real-time
         // if(req.io){
         //     req.io.to(receiverId).emit("receivedFriendRequest",{
@@ -34,6 +35,7 @@ export async function sendFriendRequest(req, res) {
             success: true,
             request
         })
+        
 
     } catch (error) {
         console.log("Error while sending Friend Request", error)

@@ -7,7 +7,7 @@ import generateRefreshToken from "../utils/user/generateRefreshToken.js";
 import { checkLoginAttemps, recordFailedAttempt, resetAttempts } from "../utils/user/loginRateLimit.js";
 import { generateOTP } from "../utils/user/otpGenerator.js";
 import { transporter } from "../utils/user/mailSender.js"
-import redisClient from "../../redisconfig/redis.js";
+import redisClient from "../config/redis.config.js";
 import svgCaptcha from "svg-captcha"
 import FriendRequest from "../model/friendrequest.model.js";
 import Friend from "../model/friend.model.js";

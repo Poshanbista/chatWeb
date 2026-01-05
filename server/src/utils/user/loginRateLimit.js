@@ -1,4 +1,4 @@
-import redisClient from "../../redisconfig/redis.js";
+import redisClient from "../../config/redis.config.js";
 
 
 const MAX_ATTEMPTS = 5;

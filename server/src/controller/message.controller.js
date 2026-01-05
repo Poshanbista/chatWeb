@@ -1,6 +1,6 @@
 import MessageModel from "../model/message.model.js";
 import { StatusCodes } from "http-status-codes"
-import uploadOnCloudinary from "../utils/cloudinary.config.js";
+import uploadOnCloudinary from "../config/cloudinary.config.js"
 
 
 // send Message
